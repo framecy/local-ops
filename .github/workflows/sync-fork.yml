@@ -32,8 +32,9 @@ jobs:
             echo "Fork already up to date"
             exit 0
           fi
-          git merge --ff-only upstream/main || {
-            echo "::error::Upstream diverged from fork (local commits or history rewrite). Manual merge needed."
+          git merge upstream/main --no-edit || {
+            echo "::error::Merge conflict between fork and upstream. Manual resolution needed."
             exit 1
           }
+          git push origin main
           git push origin main
