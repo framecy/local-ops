@@ -1,0 +1,39 @@
+name: Sync fork with upstream
+
+on:
+  schedule:
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-fork
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fork
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Sync from upstream
+        run: |
+          git remote add upstream https://github.com/laogou717/local-ops.git
+          git fetch upstream main
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git merge-base --is-ancestor upstream/main main; then
+            echo "Fork already up to date"
+            exit 0
+          fi
+          git merge --ff-only upstream/main || {
+            echo "::error::Upstream diverged from fork (local commits or history rewrite). Manual merge needed."
+            exit 1
+          }
+          git push origin main
